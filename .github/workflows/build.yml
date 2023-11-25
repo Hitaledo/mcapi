@@ -25,4 +25,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: mcapi
-        path: target/mcapi-1.0-SNAPSHOT.jar
+        path: target/mcapi-1.0-SNAPSHOT-jar-with-dependencies.jar
