@@ -3,9 +3,11 @@ package com.hitaledo.mcapi;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
-import static spark.Spark.*;
+import io.javalin.Javalin;
 
 public class Web {
+    private static Javalin webApp;
+
     public static void enable(App plugin) {
         Integer port;
         String password;
@@ -23,25 +25,28 @@ public class Web {
             plugin.getLogger().info(ChatColor.GREEN + "Password config not found. Using default value: " + password);
         }
         final String finalPassword = password;
-        port(port);
-        get("/", (req, res) -> "Minecraft API enabled!");
-        post("/command", (req, res) -> {
-            if (!finalPassword.equals(req.queryParams("password"))) {
-                return false;
+        webApp = Javalin.create().start(port);
+        webApp.get("/", ctx -> ctx.result("Minecraft API enabled!"));
+        webApp.post("/command", ctx -> {
+            if (!finalPassword.equals(ctx.queryParam("password"))) {
+                ctx.result("false");
+            } else {
+                String command = ctx.queryParam("command");
+                try {
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                    });
+                    ctx.result("true");
+                } catch (Exception e) {
+                    ctx.result("false");
+                }
             }
-            String command = req.queryParams("command");
-            try {
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
-                });
-            } catch (Exception e) {
-                return false;
-            }
-            return true;
         });
     }
 
     public static void disable() {
-        stop();
+        if (webApp != null) {
+            webApp.stop();
+        }
     }
 }
