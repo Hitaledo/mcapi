@@ -28,10 +28,10 @@ public class Web {
         webApp = Javalin.create().start(port);
         webApp.get("/", ctx -> ctx.result("Minecraft API enabled!"));
         webApp.post("/command", ctx -> {
-            if (!finalPassword.equals(ctx.queryParam("password"))) {
+            if (!finalPassword.equals(ctx.formParam("password"))) {
                 ctx.result("false");
             } else {
-                String command = ctx.queryParam("command");
+                String command = ctx.formParam("command");
                 try {
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
